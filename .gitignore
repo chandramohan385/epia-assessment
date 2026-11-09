@@ -6,7 +6,7 @@ node_modules/
 
 # SQLite local database files
 *.db
-*.db-journal
+*.db-*
 *.sqlite
 *.sqlite3
 
