@@ -302,10 +302,10 @@ function rejectDraft(req, res, next) {
  */
 function getStats(req, res, next) {
   try {
-    const todayStr = formatDate(new Date());
+    const targetDate = req.query.date || formatDate(new Date());
 
     const total = db.prepare('SELECT COUNT(*) as count FROM patients').get().count;
-    const dueToday = db.prepare("SELECT COUNT(*) as count FROM patients WHERE next_follow_up_date = ? AND follow_up_status = 'pending'").get(todayStr).count;
+    const dueToday = db.prepare("SELECT COUNT(*) as count FROM patients WHERE next_follow_up_date = ? AND follow_up_status = 'pending'").get(targetDate).count;
     const pendingApproval = db.prepare("SELECT COUNT(*) as count FROM patients WHERE ai_draft_message IS NOT NULL AND approval_status = 'pending'").get().count;
     const completed = db.prepare("SELECT COUNT(*) as count FROM patients WHERE follow_up_status = 'completed'").get().count;
 
@@ -316,7 +316,7 @@ function getStats(req, res, next) {
         dueToday,
         pendingApproval,
         completed,
-        todayDate: todayStr
+        todayDate: targetDate
       }
     });
   } catch (err) {

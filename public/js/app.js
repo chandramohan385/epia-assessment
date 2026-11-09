@@ -114,9 +114,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // 1. Fetch & Display Stats
   async function loadStats() {
     try {
-      const res = await fetch('/api/stats');
+      const selectedDate = dueDateFilter ? (dueDateFilter.value || todayStr) : todayStr;
+      const res = await fetch(`/api/stats?date=${encodeURIComponent(selectedDate)}&_t=${Date.now()}`);
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.data) {
         statTotal.textContent = data.data.total;
         statDueToday.textContent = data.data.dueToday;
         statPendingApproval.textContent = data.data.pendingApproval;
@@ -133,10 +134,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedDate = dueDateFilter.value || todayStr;
 
     try {
-      const res = await fetch(`/api/patients/due-today?date=${encodeURIComponent(selectedDate)}`);
+      const res = await fetch(`/api/patients/due-today?date=${encodeURIComponent(selectedDate)}&_t=${Date.now()}`);
       const result = await res.json();
 
       if (!result.success || !result.data || result.data.length === 0) {
+        statDueToday.textContent = '0';
         duePatientsContainer.innerHTML = `
           <div class="empty-draft-prompt">
             <p><strong>🎉 All caught up!</strong> No pending follow-ups due for <strong>${escapeHtml(selectedDate)}</strong>.</p>
@@ -146,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
+      statDueToday.textContent = result.data.length;
       duePatientsContainer.innerHTML = '';
       result.data.forEach(patient => {
         const card = createDuePatientCard(patient);
@@ -282,8 +285,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (search) queryParams.append('search', search);
 
     try {
+      queryParams.append('_t', Date.now());
       const res = await fetch(`/api/patients?${queryParams.toString()}`);
       const result = await res.json();
+
+      // Synchronize dashboard summary cards when unfiltered
+      if (result.success && Array.isArray(result.data) && !status && !search) {
+        statTotal.textContent = result.data.length;
+        statCompleted.textContent = result.data.filter(p => p.follow_up_status === 'completed').length;
+        statPendingApproval.textContent = result.data.filter(p => p.ai_draft_message && p.approval_status === 'pending').length;
+      }
 
       if (!result.success || !result.data || result.data.length === 0) {
         patientsTableBody.innerHTML = `
