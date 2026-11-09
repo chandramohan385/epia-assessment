@@ -305,9 +305,9 @@ function getStats(req, res, next) {
     const todayStr = formatDate(new Date());
 
     const total = db.prepare('SELECT COUNT(*) as count FROM patients').get().count;
-    const dueToday = db.prepare('SELECT COUNT(*) as count FROM patients WHERE next_follow_up_date = ? AND follow_up_status = "pending"').get(todayStr).count;
-    const pendingApproval = db.prepare('SELECT COUNT(*) as count FROM patients WHERE ai_draft_message IS NOT NULL AND approval_status = "pending"').get().count;
-    const completed = db.prepare('SELECT COUNT(*) as count FROM patients WHERE follow_up_status = "completed"').get().count;
+    const dueToday = db.prepare("SELECT COUNT(*) as count FROM patients WHERE next_follow_up_date = ? AND follow_up_status = 'pending'").get(todayStr).count;
+    const pendingApproval = db.prepare("SELECT COUNT(*) as count FROM patients WHERE ai_draft_message IS NOT NULL AND approval_status = 'pending'").get().count;
+    const completed = db.prepare("SELECT COUNT(*) as count FROM patients WHERE follow_up_status = 'completed'").get().count;
 
     return res.status(200).json({
       success: true,
